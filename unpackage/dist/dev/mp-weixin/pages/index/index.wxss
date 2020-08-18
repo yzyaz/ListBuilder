@@ -1,0 +1,48 @@
+
+.spImg {
+	width: 750rpx;
+}
+.myList {
+	display: -webkit-box;
+	display: -webkit-flex;
+	display: flex;
+	-webkit-flex-wrap: wrap;
+	        flex-wrap: wrap;
+	padding: 0 20rpx;
+}
+.listItem {
+	width: 345rpx;
+	margin-top: 10rpx;
+}
+.listItem:nth-child(odd) {
+	margin-right: 20rpx;
+}
+.listItem .title {
+	color: rgba(0, 0, 0, .87);
+	font-size: 30rpx;
+}
+.listItem .parameter {
+	font-size: 25rpx;
+	text-align: center;
+	/* color: rgba(0, 0, 0, .54); */
+}
+.listItem .add {
+	font-size: 25rpx;
+	/* color: rgba(0, 0, 0, .54); */
+}
+.listItem .tagList {
+	font-size: 25rpx;
+	color: rgba(0, 0, 0, .4);
+}
+.listItem .tagList .tag {
+	display: inline-block;
+	padding: 4rpx 10rpx;
+	background-color: rgba(0, 0, 0, .03);
+	margin-right: 20rpx;
+}
+.listItem .price {
+	font-size: 32rpx;
+	text-align: center;
+	color: #ea625b;
+}
+
