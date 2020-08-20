@@ -1,20 +1,20 @@
 <template>
 	<view class="myList">
 		<view class="listItem" v-for="(item,index) in myList" :key="index">
-			<image style="width: 345rpx;height: 280rpx;" :src="item.showImg" mode=""></image>
-			<view class="title ellipsis">{{item.title}}</view>
-			<view class="parameter ellipsis">{{item.parameter.replace(/,/g," | ")}}</view>
-			<view class="add ellipsis">
+			<image style="width: 345rpx;height: 280rpx;" :src="item.itemShowImg" mode=""></image>
+			<view class="title ellipsis">{{item.itemTitle}}</view>
+			<view class="parameter ellipsis" v-if="item.itemType!=='房源'">{{item.itemTags.join(' | ')}}</view>
+			<view class="add ellipsis" v-if="item.itemType==='房源'">
 				<uni-icons type="location-filled" size="13rpx"></uni-icons>
-				{{item.add || '未知'}}
+				{{item.itemSite || '未知'}}
 			</view>
-			<view class="tagList ellipsis">
-				<view v-if="!item.tag" class="tag">...</view>
-				<view class="tag" v-for="(i,idx) in item.tag" :key='idx'>
+			<view class="tagList ellipsis" v-if="item.itemType==='房源'">
+				<view v-if="!item.itemTags" class="tag">...</view>
+				<view class="tag" v-for="(i,idx) in item.itemTags" :key='idx'>
 					{{i}}
 				</view>
 			</view>
-			<view class="price"> {{item.price}} </view>
+			<view class="price" v-if="item.itemType!=='个人作品'"> {{'￥'+item.itemPrice}} </view>
 		</view>
 	</view>
 </template>
@@ -73,7 +73,7 @@
 	.listItem .tagList {
 		font-size: 25rpx;
 		color: rgba(0, 0, 0, .4);
-
+		text-align: center;
 	}
 
 	.listItem .tagList .tag {
