@@ -10,12 +10,15 @@
 			</u-form-item>
 			<u-form-item label="标签" prop="itemTag">
 				<view class="">
-					<u-input style="margin-right: 40rpx;float: left; width: 460rpx;" type="" v-model="newItemFormData.tag" placeholder="请填写标签" />
+					<u-input style="margin-right: 40rpx;float: left; width: 460rpx;" type="" v-model="newItemFormData.tag" placeholder="请填写标签 ( 建议2个 )" />
 					<u-button @click="addItemTags" size="mini" style="font-size: 40rpx; height: 60rpx; padding: 0 20rpx; line-height: 50rpx;float: right;">+</u-button>
 				</view>
 			</u-form-item>
 			<u-tag style="margin:0 15rpx 10rpx 0" v-for="(i,idx) in newItemFormData.itemTags" :key=idx :text="i" :type="tagType[idx%5]"
 			 mode="light" shape="circle" closeable @close="tagClick(idx)" />
+			<u-form-item label="描述" prop="itemContent">
+				<u-input type="textarea" :height="100" maxlength='1000' placeholder="请填写标描述" v-model="newItemFormData.itemContent" />
+			</u-form-item>
 			<u-form-item label="位置" prop="itemSite">
 				<u-input v-model="newItemFormData.itemSite" placeholder="请填写详细位置" />
 			</u-form-item>
@@ -80,6 +83,8 @@
 				if (this.newItemFormData.tag && !this.newItemFormData.itemTags.includes(this.newItemFormData.tag)) {
 					this.newItemFormData.itemTags.push(this.newItemFormData.tag)
 					this.newItemFormData.tag = ''
+					// this.$refs.tagIpt.focus()
+					// console.log('this.$refs.tagIpt',this.$refs.tagIpt)
 				}
 			},
 			tagClick(idx) {
