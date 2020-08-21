@@ -6,12 +6,12 @@
 		</view>
 		<!-- 下拉菜单 -->
 		<u-dropdown border-bottom ref="uDropdown">
-			<u-dropdown-item v-model="dropdownData.value1" title="类别" :options="dropdownData.options1"></u-dropdown-item>
-			<u-dropdown-item v-model="dropdownData.value2" title="排序" :options="dropdownData.options2"></u-dropdown-item>
+			<u-dropdown-item @change='dropTypeChange' v-model="dropdownData.type" title="类别" :options="dropdownData.typeList"></u-dropdown-item>
+			<u-dropdown-item @change='dropSortChange' v-model="dropdownData.sortItem" title="排序" :options="dropdownData.sortItemList"></u-dropdown-item>
 			<u-dropdown-item title="标签">
 				<view class="slot-content">
 					<view class="item-box">
-						<view class="item" :class="[item.active ? 'active' : '']" @tap="tagClick(index)" v-for="(item, index) in dropdownData.list"
+						<view class="item" :class="[item.active ? 'active' : '']" @tap="tagClick(index)" v-for="(item, index) in dropdownData.tagList"
 						 :key="index">
 							{{item.label}}
 						</view>
@@ -22,6 +22,10 @@
 		</u-dropdown>
 		<!-- 列表,还有上边的具体样式后面调 -->
 		<myList :myList='myList'></myList>
+		<view style="margin: 15rpx 0;">
+			<u-divider>没有更多了</u-divider>
+		</view>
+		
 		<!-- 返回顶部 -->
 		<u-back-top :scroll-top="scrollTop" :icon-style="iconStyle"></u-back-top>
 	</view>
@@ -31,7 +35,10 @@
 	import myList from '@/components/myList/myList.vue'
 	import {
 		getSwiper,
-		getMyList
+		getMyList,
+		getItemType,
+		getMyListFromType,
+		getMyListFromSort
 	} from '@/common/util/API.js'
 
 	export default {
@@ -41,38 +48,40 @@
 		data() {
 			return {
 				spImg: [],
-				myList: null,
+				myList: [],
+				firstMyList: [],
 				scrollTop: 0,
 				iconStyle: {
 					fontSize: '32rpx',
 					color: 'rgb(41, 121, 255)',
 				},
 				dropdownData: {
-					value1: 1,
-					value2: 2,
-					options1: [{
-							label: '默认排序',
-							value: 1,
+					type: '全部',
+					sortItem: 'time-desc',
+					typeList: [],
+					sortItemList: [
+						// {
+						// 	label: '默认',
+						// 	value: 'default',
+						// },
+						{
+							label: '创建时间 - 降序',
+							value: 'time-desc',
 						},
 						{
-							label: '距离优先',
-							value: 2,
+							label: '创建时间 - 升序',
+							value: 'time-asc',
 						},
 						{
-							label: '价格优先',
-							value: 3,
-						}
+							label: '价格 - 降序',
+							value: 'price-desc',
+						},
+						{
+							label: '价格 - 升序',
+							value: 'price-asc',
+						},
 					],
-					options2: [{
-							label: '去冰',
-							value: 1,
-						},
-						{
-							label: '加冰',
-							value: 2,
-						},
-					],
-					list: [{
+					tagList: [{
 							label: '琪花瑶草',
 							active: true,
 						},
@@ -101,11 +110,19 @@
 							active: false,
 						}
 					],
+					clickTagList: []
 
 				},
 			}
 		},
 		onLoad() {
+			//获取下拉数据
+			getItemType().then(res => {
+				this.dropdownData.typeList = [{
+					value: '全部',
+					label: '全部'
+				}, ...res[1].data]
+			})
 			// 获取轮播数据
 			getSwiper().then(res => {
 				this.spImg = res[1].data
@@ -114,10 +131,12 @@
 			})
 			// 获取列表
 			getMyList().then(res => {
+				console.log('跳转首页')
 				this.myList = res[1].data.map(i => ({
 					...i,
 					itemTags: i.itemTags.split(',')
 				}))
+				this.firstMyList = JSON.parse(JSON.stringify(this.myList))
 			}).catch(err => {
 				console.log('获取轮播错误', err)
 			})
@@ -127,11 +146,44 @@
 		},
 		created() {},
 		methods: {
-			closeDropdown() {
+			tagClick(index) {
+				this.dropdownData.tagList[index].active = !this.dropdownData.tagList[index].active;
+				this.dropdownData.clickTagList = [...this.dropdownData.tagList.filter(i => i.active)]
+			},
+			closeDropdown(e) {
+				// console.log('点击标签', this.dropdownData.clickTagList)
 				this.$refs.uDropdown.close();
 			},
-			tagClick(index) {
-				this.dropdownData.list[index].active = !this.dropdownData.list[index].active;
+			//点击类别
+			dropTypeChange(e) {
+				console.log('类别', e)
+				if (e === '全部' && this.dropdownData.sortItem === 'time-desc') {
+					this.myList = this.firstMyList
+				} else {
+					getMyListFromType(e, this.dropdownData.sortItem).then(res => {
+						// console.log('res', res)
+						this.myList = res[1].data.map(i => ({
+							...i,
+							itemTags: i.itemTags.split(',')
+						}))
+					})
+
+				}
+			},
+			//点击排序
+			dropSortChange(e) {
+				console.log('排序', e)
+				if (e === 'time-desc' && this.dropdownData.type === '全部') {
+					this.myList = this.firstMyList
+				} else {
+					getMyListFromSort(e, this.dropdownData.type).then(res => {
+						// console.log('res',res)
+						this.myList = res[1].data.map(i => ({
+							...i,
+							itemTags: i.itemTags.split(',')
+						}))
+					})
+				}
 			},
 		}
 	}
@@ -139,7 +191,7 @@
 
 <style lang="scss">
 	.u-back-top {
-		background-color: rgb(160, 207, 255)
+		// background-color: rgb(160, 207, 255)
 	}
 
 	.slot-content {

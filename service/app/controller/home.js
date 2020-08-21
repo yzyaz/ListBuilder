@@ -6,165 +6,232 @@ const tinify = require('tinify');
 tinify.key = '5b3NrHFyQ24gykF1F6DZzW5gmWgHjZNQ';
 
 class HomeController extends Controller {
-  async index() {
-    const { ctx } = this;
-    ctx.body = 'hi, egg';
-  }
+	async index() {
+		const {
+			ctx
+		} = this;
+		ctx.body = 'hi, egg';
+	}
 
-  async getSwiper() {
-    const res = await this.app.mysql.select('swiper_img');
-    this.ctx.body = res;
-  }
+	async getSwiper() {
+		const res = await this.app.mysql.select('swiper_img');
+		this.ctx.body = res;
+	}
 
-  async getMyList() {
-    const res = await this.app.mysql.select('mylist');
-    this.ctx.body = res;
-  }
+	// 获取列表
+	async getMyList() {
 
-  async getItemType() {
-    const res = await this.app.mysql.select('itemtype');
-    this.ctx.body = res;
-  }
+		const sql =
+			`select id, itemType, itemCreateDate, itemShowImg, itemTitle, itemTags, itemSite, itemPrice from mylist order by itemCreateDate desc `
+		const res = await this.app.mysql.query(sql);
+		this.ctx.body = res;
+	}
+	// 类别筛选列表
+	async getMyListFromType() {
+		const sort = this.ctx.params.sort.split('-')
+		const type = this.ctx.params.type
+		console.log('type--', type)
+		let itemKey, sortType
+		console.log('sort--', sort)
+		switch (sort[0]) {
+			case 'time':
+				itemKey = 'itemCreateDate'
+				break;
+			case 'price':
+				itemKey = 'itemPrice'
+				break;
+			default:
+				itemKey = ''
+				break;
+		}
+		let sql
+		if (type === '全部') {
+			sql =
+				`select id, itemType, itemCreateDate, itemShowImg, itemTitle, itemTags, itemSite, itemPrice from mylist order by ${itemKey} ${sort[1]} `
+		} else {
+			sql =
+				`select id, itemType, itemCreateDate, itemShowImg, itemTitle, itemTags, itemSite, itemPrice from mylist where itemType = '${type}' order by ${itemKey} ${sort[1]} `
+		}
 
-  async getUnitList() {
-    const res = await this.app.mysql.select('unitlist');
-    this.ctx.body = res;
-  }
+		const res = await this.app.mysql.query(sql);
+		this.ctx.body = res;
+	}
+	// 排序列表
+	async getMyListFromSort() {
+		const sort = this.ctx.params.sort.split('-')
+		const type = this.ctx.params.type
+		console.log('sort--', sort)
+		let itemKey, sortType
+		switch (sort[0]) {
+			case 'time':
+				itemKey = 'itemCreateDate'
+				break;
+			case 'price':
+				itemKey = 'itemPrice'
+				break;
+			default:
+				itemKey = ''
+				break;
+		}
+		let sql
+		if (type === '全部') {
+			sql =
+				`select id, itemType, itemCreateDate, itemShowImg, itemTitle, itemTags, itemSite, itemPrice from mylist order by ${itemKey} ${sort[1]} `
+		} else {
+			sql =
+				`select id, itemType, itemCreateDate, itemShowImg, itemTitle, itemTags, itemSite, itemPrice from mylist where itemType = '${type}' order by ${itemKey} ${sort[1]} `
 
-  async addItemSubmit() {
-    //   获得前端传过来的数据
-    const itemData = this.ctx.request.body;
+		}
+		console.log('sql', sql)
+		const res = await this.app.mysql.query(sql);
+		this.ctx.body = res;
+	}
 
-    // 处理内容图片
-    if (itemData.itemImgList) {
-      itemData.itemImgList.split(',').forEach(async i => {
+	async getItemType() {
+		const res = await this.app.mysql.select('itemtype');
+		this.ctx.body = res;
+	}
 
-        const imgName = i.split('/').pop();
-        let ysName = imgName.split('.');
-        ysName[0] = ysName[0] + 'ys.';
-        ysName = ysName.join('');
+	async getUnitList() {
+		const res = await this.app.mysql.select('unitlist');
+		this.ctx.body = res;
+	}
 
-        const storageImg = new Promise((ok, no) => {
-          const rs = fs.createReadStream('app/public/temporary/' + imgName);
-          const ws = fs.createWriteStream('app/public/itemImgs/' + imgName);
-          rs.pipe(ws);
+	// 添加数据
+	async addItemSubmit() {
+		//   获得前端传过来的数据
+		const itemData = this.ctx.request.body;
 
-          // 拷贝一个源文件为ys名,避免压缩失败没有ys图
-          const wsys = fs.createWriteStream('app/public/itemImgs/' + ysName);
-          rs.pipe(wsys);
+		// 处理内容图片
+		if (itemData.itemImgList) {
+			itemData.itemImgList.split(',').forEach(async i => {
 
-          ws.on('finish', () => {
-            ok('完成');
-          });
-          ws.on('error', err => {
-            no(err);
-          });
-        });
+				const imgName = i.split('/').pop();
+				let ysName = imgName.split('.');
+				ysName[0] = ysName[0] + 'ys.';
+				ysName = ysName.join('');
 
-        let msg;
-        try {
-          msg = await storageImg;
-        } catch (error) {
-          msg = '存储失败:' + error;
-        }
-        // yzyconsole.log('存入信息:', msg);
+				const storageImg = new Promise((ok, no) => {
+					const rs = fs.createReadStream('app/public/temporary/' + imgName);
+					const ws = fs.createWriteStream('app/public/itemImgs/' + imgName);
+					rs.pipe(ws);
 
-        // 压缩图片
-        // images('app/public/admin/temporary/' + imgName).save('app/public/admin/articleBgi/' + ysName, { quality: 20 });// 压缩比50
+					// 拷贝一个源文件为ys名,避免压缩失败没有ys图
+					const wsys = fs.createWriteStream('app/public/itemImgs/' + ysName);
+					rs.pipe(wsys);
 
-        try {
-          tinify.fromFile('app/public/temporary/' + imgName).toFile('app/public/itemImgs/' + ysName);
-        } catch (error) {
-          // yzyconsole.log(error);
-        }
+					ws.on('finish', () => {
+						ok('完成');
+					});
+					ws.on('error', err => {
+						no(err);
+					});
+				});
 
-        // 删除临时文件 删除所有的文件(将所有文件夹置空)
-        // const emptyDir = function(fileUrl) {
-        //   const files = fs.readdirSync(fileUrl);// 读取该文件夹
-        //   files.forEach(function(file) {
-        //     const stats = fs.statSync(fileUrl + '/' + file);
-        //     if (stats.isDirectory()) {
-        //       emptyDir(fileUrl + '/' + file);
-        //     } else {
-        //       fs.unlinkSync(fileUrl + '/' + file);
-        //       console.log('删除文件' + fileUrl + '/' + file + '成功');
-        //     }
-        //   });
-        // };
-        // emptyDir('app/public/admin/temporary');
+				let msg;
+				try {
+					msg = await storageImg;
+				} catch (error) {
+					msg = '存储失败:' + error;
+				}
+				// yzyconsole.log('存入信息:', msg);
 
-      });
+				// 压缩图片
+				// images('app/public/admin/temporary/' + imgName).save('app/public/admin/articleBgi/' + ysName, { quality: 20 });// 压缩比50
 
-    }
+				try {
+					tinify.fromFile('app/public/temporary/' + imgName).toFile('app/public/itemImgs/' + ysName);
+				} catch (error) {
+					// yzyconsole.log(error);
+				}
+
+				// 删除临时文件 删除所有的文件(将所有文件夹置空)
+				// const emptyDir = function(fileUrl) {
+				//   const files = fs.readdirSync(fileUrl);// 读取该文件夹
+				//   files.forEach(function(file) {
+				//     const stats = fs.statSync(fileUrl + '/' + file);
+				//     if (stats.isDirectory()) {
+				//       emptyDir(fileUrl + '/' + file);
+				//     } else {
+				//       fs.unlinkSync(fileUrl + '/' + file);
+				//       console.log('删除文件' + fileUrl + '/' + file + '成功');
+				//     }
+				//   });
+				// };
+				// emptyDir('app/public/admin/temporary');
+
+			});
+
+		}
 
 
-    // 向数据库插入数据
-    const result = await this.app.mysql.insert('mylist', itemData);
-    // 判断是否成功,插入成功返回的row数
-    const insertSuccess = result.affectedRows === 1;
-    // 保存返回修改的id
-    const insertId = result.insertId;
-    // 返回给前端保存信息
-    this.ctx.body = {
-      isScuccess: insertSuccess,
-      insertId,
-    };
-  }
+		// 向数据库插入数据
+		const result = await this.app.mysql.insert('mylist', itemData);
+		// 判断是否成功,插入成功返回的row数
+		const insertSuccess = result.affectedRows === 1;
+		// 保存返回修改的id
+		const insertId = result.insertId;
+		// 返回给前端保存信息
+		this.ctx.body = {
+			isScuccess: insertSuccess,
+			insertId,
+		};
+	}
 
-  // 将上传图片存到暂存文件夹temporary(要不然上传了图片又没点保存图片就一直在静态文件夹中,做完这个后再去文章保存接口把暂存文件夹中的放到静态文件中)
-  async upImgToTemporary() {
-    //   获得前端传过来的文件
-    const parts = this.ctx.request.files;
-    const res = [];
+	// 将上传图片存到暂存文件夹temporary(要不然上传了图片又没点保存图片就一直在静态文件夹中,做完这个后再去文章保存接口把暂存文件夹中的放到静态文件中)
+	async upImgToTemporary() {
+		//   获得前端传过来的文件
+		const parts = this.ctx.request.files;
+		const res = [];
 
-    // 去掉特殊字符函数
-    const excludeSpecial = function(s) {
-      // 去掉转义字符
-      s = s.replace(/[\'\"\\\/\b\f\n\r\t]/g, '');
-      // 去掉特殊字符
-      s = s.replace(/[\-\@\#\$\%\^\&\*\(\)\{\}\:\"\L\<\>\?\[\]]/g, '');
-      return s;
-    };
+		// 去掉特殊字符函数
+		const excludeSpecial = function(s) {
+			// 去掉转义字符
+			s = s.replace(/[\'\"\\\/\b\f\n\r\t]/g, '');
+			// 去掉特殊字符
+			s = s.replace(/[\-\@\#\$\%\^\&\*\(\)\{\}\:\"\L\<\>\?\[\]]/g, '');
+			return s;
+		};
 
-    parts.forEach(async item => {
+		parts.forEach(async item => {
 
-      // 保存的图片名称
-      // const wsName = new Date().getTime() + path.extname(item.filename);
-      const wsName = '(' + new Date().getTime() + ')' + excludeSpecial(item.filename);
-      // 压缩图片的名称
-      // const ysName = new Date().getTime() + 'ys' + path.extname(item.filename);
-      // 流式写入temporary临时文件
-      await new Promise((ok, no) => {
-        const rs = fs.createReadStream(item.filepath);
-        const ws = fs.createWriteStream('app/public/temporary/' + wsName);
-        rs.pipe(ws);
-        ws.on('finish', () => { // 暴露也没有用,这样好免得出错
-          ok('完成');
-        });
-        ws.on('error', err => {
-          no(err);
-        });
+			// 保存的图片名称
+			// const wsName = new Date().getTime() + path.extname(item.filename);
+			const wsName = '(' + new Date().getTime() + ')' + excludeSpecial(item.filename);
+			// 压缩图片的名称
+			// const ysName = new Date().getTime() + 'ys' + path.extname(item.filename);
+			// 流式写入temporary临时文件
+			await new Promise((ok, no) => {
+				const rs = fs.createReadStream(item.filepath);
+				const ws = fs.createWriteStream('app/public/temporary/' + wsName);
+				rs.pipe(ws);
+				ws.on('finish', () => { // 暴露也没有用,这样好免得出错
+					ok('完成');
+				});
+				ws.on('error', err => {
+					no(err);
+				});
 
-        // 压缩图片
-        // images(item.filepath).save('app/public/admin/articleBgi/' + ysName, { quality: 50 });// 压缩比50
+				// 压缩图片
+				// images(item.filepath).save('app/public/admin/articleBgi/' + ysName, { quality: 50 });// 压缩比50
 
-        // // 删除服务器路径临时文件
-        // fs.unlink(parts[0].filepath, err => {
-        //   if (err) throw err;
-        // });
+				// // 删除服务器路径临时文件
+				// fs.unlink(parts[0].filepath, err => {
+				//   if (err) throw err;
+				// });
 
-        res.push({
-          url: '/public/temporary/' + wsName,
-          wsName,
-        });
-      });
+				res.push({
+					url: '/public/temporary/' + wsName,
+					wsName,
+				});
+			});
 
-    });
-    // 返回给前端名字,前端可拿这个地址访问图片静态资源
-    this.ctx.body = res;
-    // 关闭数据连接??
-    this.ctx.cleanupRequestFiles();
-  }
+		});
+		// 返回给前端名字,前端可拿这个地址访问图片静态资源
+		this.ctx.body = res;
+		// 关闭数据连接??
+		this.ctx.cleanupRequestFiles();
+	}
 }
 
 module.exports = HomeController;

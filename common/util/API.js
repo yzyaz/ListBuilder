@@ -13,6 +13,16 @@ export const getMyList = () => {
 		url: URL + '/getMyList',
 	});
 }
+export const getMyListFromType = (type,sort) => {
+	return uni.request({
+		url: URL + '/getMyListFromType/'+type+'/'+sort,
+	});
+}
+export const getMyListFromSort = (sort,type) => {
+	return uni.request({
+		url: URL + '/getMyListFromSort/'+sort+'/'+type,
+	});
+}
 
 export const getItemType = () => {
 	return uni.request({

@@ -57,6 +57,7 @@
 		upImgUrl,
 		addItemSubmit
 	} from '@/common/util/API.js'
+	import {dateFormat} from '@/common/util/date.js'
 
 	export default {
 		components: {},
@@ -193,8 +194,10 @@
 					itemTags: this.newItemFormData.itemTags.join(',')
 				}
 				data.itemImgList = files.map(i => URL + i.response[0].url).join(',')
-				console.log('data', data)
 				data.itemShowImg = data.itemImgList.split(',')[0]
+				//上传时间
+				data.itemCreateDate = dateFormat('YYYY-mm-dd HH:MM:SS',new Date())
+				console.log('data', data)
 
 				// 处理未按+的标签,若标签为空单表单中有只是没有按+则直接设为标签
 				if (!this.newItemFormData.itemTags.length && this.newItemFormData.tag) {
@@ -236,6 +239,17 @@
 								isTab: true,
 								duration: 600
 							})
+								this.newItemFormData= {
+									itemType: '',
+									itemTitle: '',
+									tag: '',
+									itemTags: [],
+									itemContent: '',
+									itemSite: '',
+									itemPrice: 0,
+									itemPriceUnit: '元',
+								}
+								this.fileList=[]
 						} else {
 							//上传失败
 							this.$refs.uToast.show({
