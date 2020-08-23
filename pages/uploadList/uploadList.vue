@@ -15,6 +15,7 @@
 			</u-form-item>
 			<u-tag style="margin:0 15rpx 10rpx 0" v-for="(i,idx) in newItemFormData.itemTags" :key=idx :text="i" :type="tagType[idx%5]"
 			 mode="light" shape="circle" closeable @close="tagClick(idx)" />
+
 			<u-form-item label="描述" prop="itemContent">
 				<u-input type="textarea" :height="100" maxlength='1000' placeholder="请填写标描述" v-model="newItemFormData.itemContent" />
 			</u-form-item>
@@ -27,6 +28,21 @@
 			<u-form-item label="价格单位" prop="itemPriceUnit" label-width="200" v-if="newItemFormData.itemType==='房源'||newItemFormData.itemType==='商品'">
 				<u-input type="select" :select-open="UnitShow" v-model="newItemFormData.itemPriceUnit" placeholder="请选择价格单位" @click="UnitShow = true"></u-input>
 			</u-form-item>
+			<block v-if="newItemFormData.itemType==='房源'">
+				<u-form-item label="付款方式" label-width="200" prop="itemPayment">
+					<u-input type="select" :select-open="PaymentShow" v-model="newItemFormData.itemPayment" placeholder="请选择付款方式"
+					 @click="PaymentShow = true"></u-input>
+				</u-form-item>
+				<u-form-item label="参数-户型" prop="itemHouseType" label-width="200">
+					<u-input type="textarea" :height="1" placeholder="请填写户型 ( 如: 三室一厅一卫 )" v-model="newItemFormData.itemHouseType" />
+				</u-form-item>
+				<u-form-item label="参数-面积" prop="itemHouseArea" label-width="200">
+					<u-input type="textarea" :height="1" placeholder="请填写面积" v-model="newItemFormData.itemHouseArea" />
+				</u-form-item>
+				<u-form-item label="参数-楼层" prop="itemHouseFloor" label-width="200">
+					<u-input type="textarea" :height="1" placeholder="请填写楼层" v-model="newItemFormData.itemHouseFloor" />
+				</u-form-item>
+			</block>
 
 			<view style="width: 100%;margin:15rpx 0 30rpx;">
 				<view style="text-align: center;font-size: 40rpx;">图片上传</view>
@@ -41,6 +57,7 @@
 			<!-- 选择列表 -->
 			<u-select v-model="itemTypeShow" :list="itemTypeList" @confirm="itemTypeConfirm"></u-select>
 			<u-select v-model="UnitShow" :list="UnitList" @confirm="UnitConfirm"></u-select>
+			<u-select v-model="PaymentShow" :list="PaymentList" @confirm="PaymentConfirm"></u-select>
 		</u-form>
 
 		<!-- <u-button @click="openMap">唤起地图</u-button> -->
@@ -57,7 +74,9 @@
 		upImgUrl,
 		addItemSubmit
 	} from '@/common/util/API.js'
-	import {dateFormat} from '@/common/util/date.js'
+	import {
+		dateFormat
+	} from '@/common/util/date.js'
 
 	export default {
 		components: {},
@@ -72,6 +91,10 @@
 					itemSite: '',
 					itemPrice: 0,
 					itemPriceUnit: '元',
+					itemPayment: '押一付三',
+					itemHouseType: '',
+					itemHouseFloor: '',
+					itemHouseArea: ''
 				},
 				rules: {
 					itemTitle: [{
@@ -84,7 +107,7 @@
 						required: true,
 						message: '请选择类别',
 						// 可以单个或者同时写两个触发验证方式 
-						trigger: ['blur','change'],
+						trigger: ['blur', 'change'],
 					}],
 					itemTag: [{
 						validator: (rule, value, callback) => {
@@ -106,7 +129,33 @@
 				tagType: ['primary', 'success', 'warning', 'error', 'info'],
 				UnitShow: false,
 				UnitList: [],
-				isImgMsg:false,
+				PaymentShow: false,
+				PaymentList: [{
+						value: '押一付一',
+						label: '押一付一'
+					},
+					{
+						value: '押一付三',
+						label: '押一付三'
+					},
+					{
+						value: '押一付四',
+						label: '押一付四'
+					},
+					{
+						value: '押一付六',
+						label: '押一付六'
+					},
+					{
+						value: '押一付年',
+						label: '押一付年'
+					},
+					{
+						value: '免押金',
+						label: '免押金'
+					}
+				],
+				isImgMsg: false,
 
 				action: upImgUrl,
 				fileList: [
@@ -141,20 +190,24 @@
 				// console.log('e', e)
 				this.newItemFormData.itemType = e[0].value
 				//更改验证规则添加地址验证
-				if(e[0].value==='房源'){
+				if (e[0].value === '房源') {
 					this.rules.itemSite = [{
-							required: true,
-							message: '请输入地址',
-							// 可以单个或者同时写两个触发验证方式 
-							trigger: ['blur'],
+						required: true,
+						message: '请输入地址',
+						// 可以单个或者同时写两个触发验证方式 
+						trigger: ['blur'],
 					}]
-				}else{
+				} else {
 					delete this.rules.itemSite
 				}
 			},
 			UnitConfirm(e) {
 				// console.log('e', e)
 				this.newItemFormData.itemPriceUnit = e[0].value
+			},
+			PaymentConfirm(e) {
+				// console.log('e', e)
+				this.newItemFormData.itemPayment = e[0].value
 			},
 			addItemTags() {
 				if (this.newItemFormData.tag && !this.newItemFormData.itemTags.includes(this.newItemFormData.tag)) {
@@ -168,8 +221,8 @@
 				this.newItemFormData.itemTags.splice(idx, 1)
 			},
 			// 上传触发
-			uploadChange(){
-				 this.isImgMsg=false
+			uploadChange() {
+				this.isImgMsg = false
 			},
 
 
@@ -193,10 +246,10 @@
 					itemPrice: this.newItemFormData.itemPrice + this.newItemFormData.itemPriceUnit,
 					itemTags: this.newItemFormData.itemTags.join(',')
 				}
-				data.itemImgList = files.map(i => URL + i.response[0].url).join(',')
+				data.itemImgList = files.map(i => URL + '/public/itemImgs/' + i.response[0].wsName).join(',')
 				data.itemShowImg = data.itemImgList.split(',')[0]
 				//上传时间
-				data.itemCreateDate = dateFormat('YYYY-mm-dd HH:MM:SS',new Date())
+				data.itemCreateDate = dateFormat('YYYY-mm-dd HH:MM:SS', new Date())
 				console.log('data', data)
 
 				// 处理未按+的标签,若标签为空单表单中有只是没有按+则直接设为标签
@@ -216,7 +269,7 @@
 						verification = false
 					}
 				});
-				if(!data.itemImgList.length) this.isImgMsg = !(verification = false)
+				if (!data.itemImgList.length) this.isImgMsg = !(verification = false)
 
 				// this.$refs.uToast.show({
 				// 	title: '上传成功',
@@ -232,24 +285,38 @@
 						console.log('上传返回', res)
 						if (res[1].data.isScuccess) {
 							//上传成功
+							// 清空本页数据
+							this.newItemFormData = {
+								itemType: '',
+								itemTitle: '',
+								tag: '',
+								itemTags: [],
+								itemContent: '',
+								itemSite: '',
+								itemPrice: 0,
+								itemPriceUnit: '元',
+								itemPayment: '押一付三',
+								itemHouseType: '',
+								itemHouseFloor: '',
+								itemHouseArea: ''
+							}
+							this.$refs.itemImgsUpload.lists = []
+							// 存入本地用于更新index
+							data.id=res.id
+							try {
+								uni.setStorageSync('newItem', JSON.stringify(data))
+							} catch (e) {
+								console.log('存入本地数据错误', e)
+							}
+							// 成功提示
 							this.$refs.uToast.show({
 								title: '上传成功',
 								type: 'success',
 								url: '/pages/index/index',
+								// params:{data:encodeURIComponent(JSON.stringify(data))},
 								isTab: true,
 								duration: 600
 							})
-								this.newItemFormData= {
-									itemType: '',
-									itemTitle: '',
-									tag: '',
-									itemTags: [],
-									itemContent: '',
-									itemSite: '',
-									itemPrice: 0,
-									itemPriceUnit: '元',
-								}
-								this.fileList=[]
 						} else {
 							//上传失败
 							this.$refs.uToast.show({
@@ -278,11 +345,11 @@
 	}
 </script>
 
-<style>
-.showImgMsg{
-	    font-size: 12px;
-	    line-height: 12px;
-	    color: #fa3534;
-	    margin-top: 6px;
-}
+<style scoped>
+	.showImgMsg {
+		font-size: 12px;
+		line-height: 12px;
+		color: #fa3534;
+		margin-top: 6px;
+	}
 </style>

@@ -2,6 +2,7 @@
 
 const Controller = require('egg').Controller;
 const fs = require('fs');
+const path = require('path')
 const tinify = require('tinify');
 tinify.key = '5b3NrHFyQ24gykF1F6DZzW5gmWgHjZNQ';
 
@@ -87,6 +88,13 @@ class HomeController extends Controller {
 		this.ctx.body = res;
 	}
 
+	async getItemDetails() {
+		const id = this.ctx.params.id
+		const sql = `select * from mylist where id = '${id}'`
+		const res = await this.app.mysql.query(sql);
+		this.ctx.body = res;
+	}
+
 	async getItemType() {
 		const res = await this.app.mysql.select('itemtype');
 		this.ctx.body = res;
@@ -105,11 +113,17 @@ class HomeController extends Controller {
 		// 处理内容图片
 		if (itemData.itemImgList) {
 			itemData.itemImgList.split(',').forEach(async i => {
-
+				// console.log('imgName', i)
 				const imgName = i.split('/').pop();
-				let ysName = imgName.split('.');
-				ysName[0] = ysName[0] + 'ys.';
-				ysName = ysName.join('');
+				let imgUrls = imgName.split('.')
+				imgUrls[imgUrls.length - 2] += 'ys'
+				let ysName = imgUrls.join('.')
+				// console.log('ysname', ysName)
+
+				// const imgName = i.split('/').pop();
+				// let ysName = imgName.split('.');
+				// ysName[0] = ysName[0] + 'ys.';
+				// ysName = ysName.join('');
 
 				const storageImg = new Promise((ok, no) => {
 					const rs = fs.createReadStream('app/public/temporary/' + imgName);

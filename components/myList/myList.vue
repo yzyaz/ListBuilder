@@ -1,6 +1,6 @@
 <template>
 	<view class="myList">
-		<view class="listItem" v-for="(item,index) in myList" :key="index">
+		<view @click="$emit('listClick',item.id)" class="listItem" v-for="(item,index) in myList" :key="index">
 			<image style="width: 345rpx;height: 280rpx;" :src="item.itemShowImg" mode=""></image>
 			<view class="title ellipsis">{{item.itemTitle}}</view>
 			<view class="parameter ellipsis" v-if="item.itemType!=='房源'">{{item.itemTags.join(' | ')}}</view>

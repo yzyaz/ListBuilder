@@ -10,6 +10,7 @@ module.exports = app => {
   router.get('/getMyList', controller.home.getMyList);
   router.get('/getMyListFromType/:type/:sort', controller.home.getMyListFromType);
   router.get('/getMyListFromSort/:sort/:type', controller.home.getMyListFromSort);
+  router.get('/getItemDetails/:id', controller.home.getItemDetails);
   router.get('/getItemType', controller.home.getItemType);
   router.get('/getUnitList', controller.home.getUnitList);
   router.post('/upImgToTemporary', controller.home.upImgToTemporary);

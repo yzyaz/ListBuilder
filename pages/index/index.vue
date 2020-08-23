@@ -1,7 +1,7 @@
 <template>
 	<view>
 		<!-- 轮播图 -->
-		<view style="padding: 30rpx;">
+		<view style="margin: 30rpx;">
 			<u-swiper :list="spImg" title :effect3d="true"></u-swiper>
 		</view>
 		<!-- 下拉菜单 -->
@@ -21,11 +21,11 @@
 			</u-dropdown-item>
 		</u-dropdown>
 		<!-- 列表,还有上边的具体样式后面调 -->
-		<myList :myList='myList'></myList>
+		<myList :myList='myList' @listClick='listClick($event)'></myList>
 		<view style="margin: 15rpx 0;">
 			<u-divider>没有更多了</u-divider>
 		</view>
-		
+
 		<!-- 返回顶部 -->
 		<u-back-top :scroll-top="scrollTop" :icon-style="iconStyle"></u-back-top>
 	</view>
@@ -40,6 +40,7 @@
 		getMyListFromType,
 		getMyListFromSort
 	} from '@/common/util/API.js'
+	import addYS from '@/common/util/addYS.js'
 
 	export default {
 		components: {
@@ -115,13 +116,16 @@
 				},
 			}
 		},
-		onLoad() {
+		onLoad(option) {
+			console.log('onload')
 			//获取下拉数据
 			getItemType().then(res => {
 				this.dropdownData.typeList = [{
 					value: '全部',
 					label: '全部'
 				}, ...res[1].data]
+			}).catch(err => {
+				console.log('获取下拉错误', err)
 			})
 			// 获取轮播数据
 			getSwiper().then(res => {
@@ -131,15 +135,45 @@
 			})
 			// 获取列表
 			getMyList().then(res => {
-				console.log('跳转首页')
+				console.log('获取数据', res)
 				this.myList = res[1].data.map(i => ({
 					...i,
-					itemTags: i.itemTags.split(',')
+					itemTags: i.itemTags.split(','),
+					itemShowImg: addYS(i.itemShowImg)
 				}))
 				this.firstMyList = JSON.parse(JSON.stringify(this.myList))
 			}).catch(err => {
 				console.log('获取轮播错误', err)
 			})
+			//添加数据后跳转过来
+			// console.log('option',option)
+			// if(option.data){
+			// 	console.log('data11',JSON.parse(decodeURIComponent(option.data)))
+			// 	this.myList=[option.data,...this.myList]
+			// }
+
+		},
+		onShow() {
+			// console.log('onshowiii')
+			const valueStr = uni.getStorageSync('newItem')
+			if (valueStr) {
+				const value = JSON.parse(valueStr);
+				value.itemTags = value.itemTags.split(',')
+				this.myList.splice(0, 0, value)
+				this.firstMyList.splice(0, 0, value)
+				try {
+					uni.setStorageSync('newItem', '');
+				} catch (e) {
+					console.log('置空本地数据失败', e)
+				}
+			}
+
+			// try {
+			// if (value) {
+			// }
+			// } catch (e) {
+			// 	console.log('读取本地数据失败', e)
+			// }
 		},
 		onPageScroll(e) {
 			this.scrollTop = e.scrollTop;
@@ -164,7 +198,8 @@
 						// console.log('res', res)
 						this.myList = res[1].data.map(i => ({
 							...i,
-							itemTags: i.itemTags.split(',')
+							itemTags: i.itemTags.split(','),
+							itemShowImg: addYS(i.itemShowImg)
 						}))
 					})
 
@@ -180,16 +215,24 @@
 						// console.log('res',res)
 						this.myList = res[1].data.map(i => ({
 							...i,
-							itemTags: i.itemTags.split(',')
+							itemTags: i.itemTags.split(','),
+							itemShowImg: addYS(i.itemShowImg)
 						}))
 					})
 				}
 			},
+			// 点击列表item
+			listClick(e) {
+				console.log('点击list', e)
+				uni.navigateTo({
+					url: '/pages/details/details?id=' + e
+				});
+			}
 		}
 	}
 </script>
 
-<style lang="scss">
+<style scoped lang="scss">
 	.u-back-top {
 		// background-color: rgb(160, 207, 255)
 	}
