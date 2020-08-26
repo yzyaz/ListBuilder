@@ -65,4 +65,37 @@ export const addItemSubmit = (data) => {
 		data
 	});
 }
+export const delItem = (id) => {
+	return uni.request({
+		url: URL + '/delItem/'+id,
+		method:'DELETE'
+	});
+}
+// // 测试session
+// export const ceshi = () => {
+// 	return uni.request({
+// 		url: URL + '/ceshi'
+// 	});
+// }
+// // 测试session2
+// export const ceshi2 = () => {
+// 	return uni.request({
+// 		url: URL + '/ceshi2'
+// 	});
+// }
 
+// 批量删除
+export const delItems = (ids) => {
+	ids = ids.join(',')
+	return uni.request({
+		url: URL + '/delItems/'+ids,
+		method:'DELETE'
+	});
+}
+
+// 获取分组类型列表
+export const getGropType = () => {
+	return uni.request({
+		url: URL + '/getGropType',
+	});
+}

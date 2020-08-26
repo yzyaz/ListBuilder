@@ -13,6 +13,16 @@ class HomeController extends Controller {
 		} = this;
 		ctx.body = 'hi, egg';
 	}
+		
+	// 	async ceshi() {
+	// 		this.ctx.session.sessionId='1234560'
+	// 		console.log('222',this.ctx.session.sessionId)
+	// 		this.ctx.body = 'session';
+	// 	}
+	// async ceshi2() {
+	// 	console.log('session',this.ctx.session.sessionId)
+	// 	this.ctx.body = 'get session';
+	// }
 
 	async getSwiper() {
 		const res = await this.app.mysql.select('swiper_img');
@@ -190,6 +200,27 @@ class HomeController extends Controller {
 			isScuccess: insertSuccess,
 			insertId,
 		};
+	}
+	
+	async delItem(){
+		const id = this.ctx.params.id
+		// const sql = `delete from mylist where id = ${id}`
+		// const res = await this.app.mysql.query(sql)
+		const res =  await this.app.mysql.delete('mylist', { id })
+		this.ctx.body = res
+	}
+	
+	async delItems(){
+		const ids = this.ctx.params.ids
+		const sql = `delete from mylist where id in (${ids})`
+		const res = await this.app.mysql.query(sql)
+		// const res =  await this.app.mysql.delete('mylist', { id })
+		this.ctx.body = res
+	}
+	
+	async getGropType(){
+		const res = await this.app.mysql.select('groptype');
+		this.ctx.body = res
 	}
 
 	// 将上传图片存到暂存文件夹temporary(要不然上传了图片又没点保存图片就一直在静态文件夹中,做完这个后再去文章保存接口把暂存文件夹中的放到静态文件中)

@@ -30,7 +30,7 @@ module.exports = appInfo => {
       enable: false,
     },
     // 网络白名单
-    // domainWhiteList: [ '*' ],
+    domainWhiteList: [ '*' ],
   };
 
   config.cors = {
