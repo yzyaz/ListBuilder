@@ -20,4 +20,8 @@ module.exports = app => {
   router.delete('/delItem/:id', controller.home.delItem);
   router.delete('/delItems/:ids', controller.home.delItems);
   router.get('/getGropType', controller.home.getGropType);
+  router.delete('/delGropType/:id', controller.home.delGropType);
+  router.post('/addGropType', controller.home.addGropType);
+  router.get('/joinGrop/:id/:gropName', controller.home.joinGrop);
+  router.get('/getGropList/:sort/:type', controller.home.getGropList);
 };

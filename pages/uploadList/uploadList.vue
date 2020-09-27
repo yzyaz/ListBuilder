@@ -250,6 +250,7 @@
 				data.itemShowImg = data.itemImgList.split(',')[0]
 				//上传时间
 				data.itemCreateDate = dateFormat('YYYY-mm-dd HH:MM:SS', new Date())
+				data.gropType = ''
 				console.log('data', data)
 
 				// 处理未按+的标签,若标签为空单表单中有只是没有按+则直接设为标签
@@ -298,11 +299,12 @@
 								itemPayment: '押一付三',
 								itemHouseType: '',
 								itemHouseFloor: '',
-								itemHouseArea: ''
+								itemHouseArea: '',
+								gropType = ''
 							}
 							this.$refs.itemImgsUpload.lists = []
 							// 存入本地用于更新index
-							data.id=res.id
+							data.id = res[1].data.insertId
 							try {
 								uni.setStorageSync('newItem', JSON.stringify(data))
 							} catch (e) {

@@ -99,3 +99,30 @@ export const getGropType = () => {
 		url: URL + '/getGropType',
 	});
 }
+// 删除分组类型列表
+export const delGropType = (id) => {
+	return uni.request({
+		url: URL + '/delGropType/'+id,
+		method:'DELETE'
+	});
+}
+// 添加分组类型列表
+export const addGropType = (data) => {
+	return uni.request({
+		url: URL + '/addGropType',
+		method:'POST',
+		data
+	});
+}
+// item加入分组类型列表
+export const joinGrop = (id,gropName) => {
+	return uni.request({
+		url: URL + '/joinGrop/'+id+'/'+gropName
+	});
+}
+// 获取分组item列表
+export const getGropList = (sort,type) => {
+	return uni.request({
+		url: URL + '/getGropList/'+sort+'/'+type,
+	});
+}

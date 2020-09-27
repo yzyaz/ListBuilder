@@ -27,14 +27,21 @@
 		<!-- 弹出操作栏 -->
 		<u-action-sheet @click="actionSheet" :list="handleItemData.handleItemList" v-model="handleItemData.handleItemShow"></u-action-sheet>
 		<u-toast ref="uToast" />
-		<u-modal v-model="modalShow" show-cancel-button mask-close-able :content="modalContent||'是否确认删除?'" @confirm="modalConfirm"></u-modal>
+		<u-modal v-model="modalShow" show-cancel-button mask-close-able :title="modalTitle" :content="'是否确认删除?'" @confirm="modalConfirm">
+			<view class="" v-if="handleIndex===1">
+				<u-input v-model="JoinGropName" :type="'select'" border @click="isShowJoinGrop = true" />
+				<u-action-sheet :list="gropTypeList" v-model="isShowJoinGrop" @click="actionSheetCallback"></u-action-sheet>
+			</view>
+		</u-modal>
 	</view>
 </template>
 
 <script>
 	import uniIcons from "@/components/uni-icons/uni-icons.vue"
 	import {
-		delItem
+		delItem,
+		joinGrop,
+		getGropType
 	} from '@/common/util/API.js'
 	export default {
 		components: {
@@ -69,18 +76,38 @@
 				handleId: '',
 				handleIndex: '',
 				modalShow: false,
-				modalContent: ''
+				modalTitle: '提示',
+				modalConfirmType: '', //操作类型
+				isShowJoinGrop: false,
+				JoinGropName: '',
+				gropTypeList: []
+
 			};
+		},
+		created() {
+			// 获取分组类型列表
+			getGropType().then(res => {
+				if (res[1].data.length) {
+					this.gropTypeList = res[1].data.map(i => ({
+						...i,
+						text: i.value
+					}))
+				}
+				console.log('grop res', res)
+			}).catch(err => {
+				console.log('获取分组错误', err)
+			})
+
 		},
 		watch: {
 			myList(val) {
-				if (val.length) {
+				// if (val.length) {
 					this.itemList = val.map(i => ({
 						...i,
 						isChoose: false //多个管理时是否被选中
 					}))
-				}
-				console.log('itemList',this.itemList)
+				// }
+				console.log('itemList', this.itemList)
 			}
 		},
 		methods: {
@@ -88,22 +115,31 @@
 			// 	this.handleItemData.handleItemShow=true
 			// }
 			// 点击item
-			listClick(item){
-				if(this.isClickManage){
-					item.isChoose=!item.isChoose
-				}else{
-				uni.navigateTo({
-					url: '/pages/details/details?id=' + item.id
-				});
+			listClick(item) {
+				if (this.isClickManage) {
+					item.isChoose = !item.isChoose
+				} else {
+					uni.navigateTo({
+						url: '/pages/details/details?id=' + item.id
+					});
 				}
 			},
 			// 点击弹出操作
 			actionSheet(i) {
 				console.log('点击操作', i, 'id:', this.handleId)
+				this.modalConfirmType = i
 				switch (i) {
 					case 0:
+						//删除
 						this.handleIndex = i
 						this.modalShow = true
+						this.modalTitle = '提示'
+						break;
+					case 1:
+						//加入分组
+						this.handleIndex = i
+						this.modalShow = true
+						this.modalTitle = '选择加入的名称'
 						break;
 					default:
 						break;
@@ -129,17 +165,58 @@
 						})
 					}
 				}).catch(err => {
-						this.$refs.uToast.show({
-							title: '删除失败' + err,
-							duration: 700,
-							type: 'error'
-						})
+					this.$refs.uToast.show({
+						title: '删除失败' + err,
+						duration: 700,
+						type: 'error'
+					})
 
 				})
 
 			},
+			joinGrop() {
+				if (this.handleId && this.JoinGropName) {
+					joinGrop(this.handleId, this.JoinGropName).then(res => {
+						console.log('加入grope res', res)
+						this.$refs.uToast.show({
+							title: '加入成功',
+							duration: 700,
+							type: 'success'
+						})
+					}).catch(err => {
+						console.log('err', err)
+						this.$refs.uToast.show({
+							title: '加入失败' + err,
+							duration: 700,
+							type: 'error'
+						})
+					})
+
+				} else {
+					this.modalShow = true
+					this.$refs.uToast.show({
+						title: '请选择名称',
+						duration: 700,
+						type: 'warning'
+					})
+				}
+			},
 			modalConfirm() {
-				this.deletItem()
+				this.modalTitle = '提示'
+				console.log('this.modalConfirmType', this.modalConfirmType)
+				switch (this.modalConfirmType) {
+					case 0:
+						this.deletItem()
+						break;
+					case 1:
+						this.joinGrop()
+						break;
+					default:
+						break;
+				}
+			},
+			actionSheetCallback(e) {
+				this.JoinGropName = this.gropTypeList[e].label
 			}
 		}
 	}

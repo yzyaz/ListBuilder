@@ -13,7 +13,7 @@ class HomeController extends Controller {
 		} = this;
 		ctx.body = 'hi, egg';
 	}
-		
+
 	// 	async ceshi() {
 	// 		this.ctx.session.sessionId='1234560'
 	// 		console.log('222',this.ctx.session.sessionId)
@@ -201,27 +201,95 @@ class HomeController extends Controller {
 			insertId,
 		};
 	}
-	
-	async delItem(){
+
+	async delItem() {
 		const id = this.ctx.params.id
 		// const sql = `delete from mylist where id = ${id}`
 		// const res = await this.app.mysql.query(sql)
-		const res =  await this.app.mysql.delete('mylist', { id })
+		const res = await this.app.mysql.delete('mylist', {
+			id
+		})
 		this.ctx.body = res
 	}
-	
-	async delItems(){
+
+	async delItems() {
 		const ids = this.ctx.params.ids
 		const sql = `delete from mylist where id in (${ids})`
 		const res = await this.app.mysql.query(sql)
 		// const res =  await this.app.mysql.delete('mylist', { id })
 		this.ctx.body = res
 	}
-	
-	async getGropType(){
-		const res = await this.app.mysql.select('groptype');
+
+	async getGropType() {
+		const sql = `select * from groptype order by createDate desc`
+		const res = await this.app.mysql.query(sql);
 		this.ctx.body = res
 	}
+
+	async delGropType() {
+		const id = this.ctx.params.id
+		// const sql = `delete from mylist where id = ${id}`
+		// const res = await this.app.mysql.query(sql)
+		const res = await this.app.mysql.delete('groptype', {
+			id
+		})
+		this.ctx.body = res
+	}
+
+	async addGropType() {
+		const itemData = this.ctx.request.body;
+		// 向数据库插入数据
+		const result = await this.app.mysql.insert('groptype', itemData);
+		// 判断是否成功,插入成功返回的row数
+		const insertSuccess = result.affectedRows === 1;
+		// 保存返回修改的id
+		const insertId = result.insertId;
+		// 返回给前端保存信息
+		this.ctx.body = {
+			isScuccess: insertSuccess,
+			insertId,
+		};
+	}
+
+	async joinGrop() {
+		const id = this.ctx.params.id
+		const gropName = this.ctx.params.gropName
+		const sql = `update mylist set gropType = '${gropName}' where id = ${id} `
+		const res = await this.app.mysql.query(sql);
+		this.ctx.body = res
+
+	}
+	//获取分组item列表
+	async getGropList() {
+		const sort = this.ctx.params.sort.split('-')
+		const type = this.ctx.params.type
+		console.log('sort--', sort)
+		let itemKey, sortType
+		switch (sort[0]) {
+			case 'time':
+				itemKey = 'itemCreateDate'
+				break;
+			case 'price':
+				itemKey = 'itemPrice'
+				break;
+			default:
+				itemKey = ''
+				break;
+		}
+		let sql
+		if (!type) {
+			sql =
+				`select id, itemType, itemCreateDate, itemShowImg, itemTitle, itemTags, itemSite, itemPrice from mylist order by ${itemKey} ${sort[1]} `
+		} else {
+			sql =
+				`select id, itemType, itemCreateDate, itemShowImg, itemTitle, itemTags, itemSite, itemPrice from mylist where gropType = '${type}' order by ${itemKey} ${sort[1]} `
+
+		}
+		console.log('sql', sql)
+		const res = await this.app.mysql.query(sql);
+		this.ctx.body = res;
+	}
+
 
 	// 将上传图片存到暂存文件夹temporary(要不然上传了图片又没点保存图片就一直在静态文件夹中,做完这个后再去文章保存接口把暂存文件夹中的放到静态文件中)
 	async upImgToTemporary() {
