@@ -40,12 +40,28 @@
 		}, {
 			"path": "pages/myInfo/contactUs/contactUs",
 			"style": {}
+		}, {
+			"path": "pages/myInfo/groupList/groupList",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		}, {
+			"path": "pages/myInfo/collectList/collectList",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		}, {
+			"path": "pages/myInfo/historyList/historyList",
+			"style": {
+				"navigationStyle": "custom"
+			}
+		}, {
+			"path": "pages/myInfo/browseData/browseData",
+			"style": {
+				"navigationStyle": "custom"
+			}
 		}
-	    ,{
-            "path" : "pages/myInfo/groupList/groupList",
-            "style" : {"navigationStyle": "custom"}
-        }
-    ],
+	],
 	"tabBar": {
 		"color": "#808080",
 		"selectedColor": "#ff713f",

@@ -22,7 +22,7 @@
 			<u-section class="" title="编辑我的列表" sub-title="查看更多"></u-section>
 		</view> -->
 		<view class="grid">
-			<u-grid :col="4">
+			<u-grid :col="3">
 				<u-grid-item @click="clickGrid('myList')">
 					<u-icon name="gift" :size="46"></u-icon>
 					<view class="grid-text">我的列表</view>
@@ -35,9 +35,17 @@
 					<u-icon name="gift" :size="46"></u-icon>
 					<view class="grid-text">分享列表组</view>
 				</u-grid-item>
-				<u-grid-item @click="clickGrid('eye')">
+				<u-grid-item @click="clickGrid('collectList')">
+					<u-icon name="gift" :size="46"></u-icon>
+					<view class="grid-text">我的收藏</view>
+				</u-grid-item>
+				<u-grid-item @click="clickGrid('browseData')">
 					<u-icon name="eye" :size="46"></u-icon>
 					<view class="grid-text">浏览数据</view>
+				</u-grid-item>
+				<u-grid-item @click="clickGrid('historyList')">
+					<u-icon name="eye" :size="46"></u-icon>
+					<view class="grid-text">历史记录</view>
 				</u-grid-item>
 			</u-grid>
 
@@ -120,6 +128,21 @@
 					case 'groupList':
 						uni.navigateTo({
 							url: '/pages/myInfo/groupList/groupList'
+						});
+						break;
+					case 'collectList':
+						uni.navigateTo({
+							url: '/pages/myInfo/collectList/collectList'
+						});
+						break;
+					case 'browseData':
+						uni.navigateTo({
+							url: '/pages/myInfo/browseData/browseData'
+						});
+						break;
+					case 'historyList':
+						uni.navigateTo({
+							url: '/pages/myInfo/historyList/historyList'
 						});
 						break;
 					default:

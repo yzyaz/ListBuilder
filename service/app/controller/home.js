@@ -259,6 +259,16 @@ class HomeController extends Controller {
 		this.ctx.body = res
 
 	}
+	// 批量加入分组
+	async joinGrops() {
+		const ids = this.ctx.params.ids
+		const gropName = this.ctx.params.gropName
+		const sql = `update mylist set gropType = '${gropName}' where id in (${ids}) `
+		const res = await this.app.mysql.query(sql);
+		this.ctx.body = res
+
+	}
+
 	//获取分组item列表
 	async getGropList() {
 		const sort = this.ctx.params.sort.split('-')
@@ -289,6 +299,113 @@ class HomeController extends Controller {
 		const res = await this.app.mysql.query(sql);
 		this.ctx.body = res;
 	}
+
+	// 收藏单个item
+	async collectItem() {
+		const itemData = this.ctx.request.body;
+		// 查是否已收藏
+		const sql = `select * from collectlist where authorId = '${itemData.authorId}' && userId = '${itemData.userId}' && itemId = '${itemData.itemId}'`
+		const isCollect = !!(await this.app.mysql.query(sql)).length;
+		if (!isCollect) {
+			// 向数据库插入数据
+			const result = await this.app.mysql.insert('collectlist', itemData);
+			// 判断是否成功,插入成功返回的row数
+			const insertSuccess = result.affectedRows === 1;
+			// 保存返回修改的id
+			const insertId = result.insertId;
+			// 返回给前端保存信息
+			this.ctx.body = {
+				isScuccess: insertSuccess,
+				insertId,
+				isCollect
+			};
+		} else {
+			this.ctx.body = {
+				isCollect
+			};
+		}
+	}
+	
+	// 取消收藏
+		async delCollectItem() {
+			const ids = this.ctx.params.ids
+			const userId = this.ctx.params.userId
+			const sql = `delete from collectlist where itemId in (${ids}) && userId = ${userId}`
+			const res = await this.app.mysql.query(sql)
+			this.ctx.body = res
+		}
+
+	// 收藏列表
+	async getCollectList() {
+			const userId = this.ctx.params.userId
+			// const sql1 = `select itemId from collectlist where userId = ${userId}`
+		const sql =
+			`select tab1.id, tab1.itemType, tab1.itemCreateDate, tab1.itemShowImg, tab1.itemTitle, tab1.itemTags, tab1.itemSite, tab1.itemPrice from collectlist as tab2 left join mylist as tab1 on tab2.itemId = tab1.id where userId = ${userId} order by itemCreateDate desc `
+		const res = await this.app.mysql.query(sql);
+		this.ctx.body = res;
+	}
+	
+	
+	// 加入历史
+	async joinHistory() {
+		const itemData = this.ctx.request.body;
+		// 查是否已加入
+		const sql = `select id from browserhistory where userId = '${itemData.userId}' && itemId = '${itemData.itemId}'`
+		const oldHistory = await this.app.mysql.query(sql);
+		if (!oldHistory.length) {
+			// 向数据库插入数据
+			const result = await this.app.mysql.insert('browserhistory', itemData);
+			// 判断是否成功,插入成功返回的row数
+			const insertSuccess = result.affectedRows === 1;
+			// 保存返回修改的id
+			const insertId = result.insertId;
+			// 返回给前端保存信息
+			this.ctx.body = {
+				isScuccess: insertSuccess,
+				insertId,
+				oldHistory
+			};
+		} else {
+			// // 修改数据
+			itemData.id=oldHistory[0].id
+			const result = await this.app.mysql.update('browserhistory', itemData);
+			// 判断是否成功,插入成功返回的row数
+			const insertSuccess = result.affectedRows === 1;
+			// 保存返回修改的id
+			const insertId = result.insertId;
+			// 返回给前端保存信息
+			this.ctx.body = {
+				isScuccess: insertSuccess,
+				insertId,
+				oldHistory
+			};
+		}
+	}
+
+	// 历史列表
+	async getHistoryList() {
+			const userId = this.ctx.params.userId
+			// const sql1 = `select itemId from collectlist where userId = ${userId}`
+		const sql =
+			`select tab2.createTime, tab1.id, tab1.itemType, tab1.itemCreateDate, tab1.itemShowImg, tab1.itemTitle, tab1.itemTags, tab1.itemSite, tab1.itemPrice from browserhistory as tab2 left join mylist as tab1 on tab2.itemId = tab1.id where userId = ${userId} order by itemCreateDate desc `
+		const res = await this.app.mysql.query(sql);
+		this.ctx.body = res;
+	}
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 	// 将上传图片存到暂存文件夹temporary(要不然上传了图片又没点保存图片就一直在静态文件夹中,做完这个后再去文章保存接口把暂存文件夹中的放到静态文件中)

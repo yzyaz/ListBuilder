@@ -12,7 +12,7 @@
 		<view class="title">{{itemDetails.itemTitle}}</view>
 		<view class="" style="margin-bottom: 20rpx;">
 			<text class="price" v-if="itemDetails.itemType==='房源'||itemDetails.itemType==='商品'">{{itemDetails.itemPrice}}</text>
-			<text class="payment" v-if="itemDetails.itemType==='房源'" >{{itemDetails.itemPayment}}</text>
+			<text class="payment" v-if="itemDetails.itemType==='房源'">{{itemDetails.itemPayment}}</text>
 		</view>
 		<!-- 参数 -->
 		<view class="parameter" v-if="itemDetails.itemType==='房源'">
@@ -45,9 +45,16 @@
 
 <script>
 	import {
-		getItemDetails
+		getItemDetails,
+		joinHistory
 	} from '@/common/util/API.js'
 	import addYS from '@/common/util/addYS.js'
+	import {
+		userId
+	} from '@/common/util/utils.js'
+	import {
+		dateFormat
+	} from '@/common/util/date.js'
 
 	export default {
 		data() {
@@ -93,6 +100,18 @@
 			}).catch(err => {
 				console.log('获取详情出错', err)
 			})
+
+			// 加入历史
+			joinHistory({
+				itemId: this.id,
+				userId: userId(),
+				createTime: dateFormat('YYYY-mm-dd HH:MM:SS', new Date())
+			}).then(res => {
+				console.log('历史加入', res)
+			})
+		},
+		created() {
+
 		},
 		methods: {
 			clickSwiper(i) {
@@ -116,7 +135,8 @@
 		color: #e54b00;
 		margin-bottom: 20rpx;
 	}
-	.payment{
+
+	.payment {
 		margin-left: 30rpx;
 		color: #999;
 	}

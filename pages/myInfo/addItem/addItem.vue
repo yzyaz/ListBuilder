@@ -77,6 +77,9 @@
 	import {
 		dateFormat
 	} from '@/common/util/date.js'
+	import {
+		userId
+	} from '@/common/util/utils.js'
 
 	export default {
 		components: {},
@@ -251,6 +254,7 @@
 				//上传时间
 				data.itemCreateDate = dateFormat('YYYY-mm-dd HH:MM:SS', new Date())
 				data.gropType = ''
+				data.authorId=userId()
 				console.log('data', data)
 
 				// 处理未按+的标签,若标签为空单表单中有只是没有按+则直接设为标签

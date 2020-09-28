@@ -23,5 +23,11 @@ module.exports = app => {
   router.delete('/delGropType/:id', controller.home.delGropType);
   router.post('/addGropType', controller.home.addGropType);
   router.get('/joinGrop/:id/:gropName', controller.home.joinGrop);
+  router.get('/joinGrops/:ids/:gropName', controller.home.joinGrops);
   router.get('/getGropList/:sort/:type', controller.home.getGropList);
+  router.post('/collectItem', controller.home.collectItem);
+  router.delete('/delCollectItem/:ids/:userId', controller.home.delCollectItem);
+  router.get('/getCollectList/:userId', controller.home.getCollectList);
+  router.post('/joinHistory', controller.home.joinHistory);
+  router.get('/getHistoryList/:userId', controller.home.getHistoryList);
 };

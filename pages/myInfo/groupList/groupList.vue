@@ -117,17 +117,28 @@
 		},
 		async onLoad() {
 			// 获取分组类型列表
-			getGropType().then(res => {
-				if (res[1].data.length) {
-					this.dropdownData.gropTypeList = res[1].data.map(i => ({
-						...i,
-						slide_x: 0
-					}))
-				}
-				console.log('grop res', res, this.dropdownData.gropTypeList)
-			}).catch(err => {
-				console.log('获取分组错误', err)
-			})
+			const storage_gropType = JSON.parse(window.localStorage.getItem('gropType'))
+			if (!storage_gropType) {
+				getGropType().then(res => {
+					if (res[1].data.length) {
+						window.localStorage.setItem('gropType', JSON.stringify(res[1].data))
+						this.dropdownData.gropTypeList = res[1].data.map(i => ({
+							...i,
+							slide_x: 0
+						}))
+					}
+					console.log('grop res', res, this.dropdownData.gropTypeList)
+				}).catch(err => {
+					console.log('获取分组错误', err)
+				})
+
+			} else {
+				this.dropdownData.gropTypeList = storage_gropType.map(i => ({
+					...i,
+					text: i.value
+				}))
+
+			}
 
 		},
 		computed: {

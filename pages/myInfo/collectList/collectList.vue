@@ -1,7 +1,7 @@
 <template>
 	<view>
 		<!-- 顶部栏 -->
-		<u-navbar :is-back="false" title="我的列表">
+		<u-navbar :is-back="false" title="我的收藏">
 			<view class="">
 				<u-icon @click="back" name="arrow-left" size="40" style="margin-left: 20rpx;"></u-icon>
 			</view>
@@ -35,7 +35,7 @@
 			</u-dropdown-item>
 		</u-dropdown>
 		<!-- 列表,还有上边的具体样式后面调 -->
-		<myList :myList='myList' :isClickManage='isClickManage' ref='myList'></myList>
+		<myList inCollect :myList='myList' :isClickManage='isClickManage' ref='myList'></myList>
 		<!-- 底线 -->
 		<view style="margin: 15rpx 0;">
 			<u-divider>没有更多了</u-divider>
@@ -48,19 +48,18 @@
 		<u-back-top :scroll-top="scrollTop" :icon-style="iconStyle"></u-back-top>
 
 		<!-- 弹出框 -->
-		<u-modal v-model="showModal" show-cancel-button mask-close-able :title="'选择加入的分组'" :content="'选择加入的分组'" @confirm="modalConfirm">
+		<!-- <u-modal v-model="showModal" show-cancel-button mask-close-able :title="'选择加入的分组'" :content="'选择加入的分组'" @confirm="modalConfirm">
 			<view class="">
 				<u-input v-model="JoinGropNames" :type="'select'" border @click="isShowJoinGrop = true" />
 				<u-action-sheet :list="gropTypeList" v-model="isShowJoinGrop" @click="actionSheetCallback"></u-action-sheet>
 			</view>
-		</u-modal>
+		</u-modal> -->
 	</view>
 </template>
 
 <script>
 	import myList from '@/components/myList/myList.vue'
 	import {
-		appURL,
 		getSwiper,
 		getMyList,
 		getItemType,
@@ -68,12 +67,14 @@
 		getMyListFromSort,
 		delItems,
 		getGropType,
-		joinGrops
+		joinGrops,
+		getCollectList,
+		delCollectItem
 	} from '@/common/util/API.js'
-	import {
-		copyText
-	} from '@/common/util/utils.js'
 	import addYS from '@/common/util/addYS.js'
+	import {
+		userId
+	} from '@/common/util/utils.js'
 
 	export default {
 		components: {
@@ -81,10 +82,10 @@
 		},
 		data() {
 			return {
-				showModal: false,
-				isShowJoinGrop: false,
-				JoinGropNames: '',
-				gropTypeList: [],
+				// showModal: false,
+				// isShowJoinGrop: false,
+				// JoinGropNames: '',
+				// gropTypeList: [],
 				chooseIds: [],
 				// isPopupShow:false,
 				// spImg: [],
@@ -156,16 +157,20 @@
 				},
 				handleItemData: {
 					handleItemShow: false,
-					handleItemList: [{
-						text: '删除',
-						color: 'red'
-					}, {
-						text: '加入分组'
-					}, {
-						text: '分享'
-					}, {
-						text: '收藏'
-					}],
+					handleItemList: [
+						// {
+						// 	text: '删除',
+						// 	color: 'red'
+						// }, {
+						// 	text: '加入分组'
+						// }, {
+						// 	text: '分享'
+						// },
+						{
+							text: '取消收藏',
+							color: 'red'
+						}
+					],
 				},
 			}
 		},
@@ -186,7 +191,6 @@
 				}).catch(err => {
 					console.log('获取分组错误', err)
 				})
-
 			} else {
 				this.gropTypeList = storage_gropType.map(i => ({
 					...i,
@@ -210,8 +214,9 @@
 			// }).catch(err => {
 			// 	console.log('获取轮播错误', err)
 			// })
+
 			// 获取列表
-			getMyList().then(res => {
+			getCollectList(userId()).then(res => {
 				console.log('获取数据', res)
 				this.myList = res[1].data.map(i => ({
 					...i,
@@ -220,8 +225,9 @@
 				}))
 				this.firstMyList = JSON.parse(JSON.stringify(this.myList))
 			}).catch(err => {
-				console.log('获取错误', err)
+				console.log('获取轮播错误', err)
 			})
+
 			//添加数据后跳转过来
 			// console.log('option',option)
 			// if(option.data){
@@ -257,38 +263,38 @@
 		},
 		created() {},
 		methods: {
-			actionSheetCallback(e) {
-				this.JoinGropNames = this.gropTypeList[e].label
-			},
-			modalConfirm() {
-				console.log('确定回调', this.chooseIds)
-				joinGrops(this.chooseIds, this.JoinGropNames).then(res => {
-					console.log('加入返回', res)
-					if (res[1].data.affectedRows > 0) {
-						this.$refs.uToast.show({
-							title: '修改成功',
-							duration: 700,
-							type: 'success',
-							callback: () => {
-								// this.$refs.myList.itemList = this.$refs.myList.itemList.filter(i => !i.isChoose)
-							}
-						})
-					} else {
-						this.$refs.uToast.show({
-							title: '修改失败',
-							duration: 700,
-							type: 'error'
-						})
-					}
-				}).catch(err => {
-					console.log('加入失败', err)
-					this.$refs.uToast.show({
-						title: '修改失败' + err,
-						duration: 700,
-						type: 'error'
-					})
-				})
-			},
+			// actionSheetCallback(e) {
+			// 	this.JoinGropNames = this.gropTypeList[e].label
+			// },
+			// modalConfirm() {
+			// 	console.log('确定回调', this.chooseIds)
+			// 	joinGrops(this.chooseIds, this.JoinGropNames).then(res => {
+			// 		console.log('加入返回', res)
+			// 		if (res[1].data.affectedRows > 0) {
+			// 			this.$refs.uToast.show({
+			// 				title: '修改成功',
+			// 				duration: 700,
+			// 				type: 'success',
+			// 				callback: () => {
+			// 					// this.$refs.myList.itemList = this.$refs.myList.itemList.filter(i => !i.isChoose)
+			// 				}
+			// 			})
+			// 		} else {
+			// 			this.$refs.uToast.show({
+			// 				title: '修改失败',
+			// 				duration: 700,
+			// 				type: 'error'
+			// 			})
+			// 		}
+			// 	}).catch(err => {
+			// 		console.log('加入失败', err)
+			// 		this.$refs.uToast.show({
+			// 			title: '修改失败' + err,
+			// 			duration: 700,
+			// 			type: 'error'
+			// 		})
+			// 	})
+			// },
 			back() {
 				uni.switchTab({
 					url: '/pages/myInfo/myInfo'
@@ -309,13 +315,49 @@
 				const choose = this.$refs.myList.itemList.filter(i => i.isChoose)
 				this.chooseIds = choose.map(i => i.id)
 				switch (i) {
+					// case 0:
+					// 	// 批量删除
+					// 	delItems(this.chooseIds).then(res => {
+					// 		console.log('delItems res', res)
+					// 		if (res[1].data.affectedRows !== 0) {
+					// 			this.$refs.uToast.show({
+					// 				title: '删除成功',
+					// 				duration: 700,
+					// 				type: 'success',
+					// 				callback: () => {
+					// 					this.$refs.myList.itemList = this.$refs.myList.itemList.filter(i => !i.isChoose)
+					// 				}
+					// 			})
+					// 		} else {
+					// 			this.$refs.uToast.show({
+					// 				title: '删除失败',
+					// 				duration: 700,
+					// 				type: 'error'
+					// 			})
+					// 		}
+					// 	}).catch(err => {
+					// 		console.log('批量删除错误', err)
+					// 		this.$refs.uToast.show({
+					// 			title: '删除失败' + err,
+					// 			duration: 700,
+					// 			type: 'error'
+					// 		})
+					// 	})
+
+					// 	break;
+
+					// case 1:
+					// 	console.log('点击批量分享')
+					// 	this.showModal = true
+					// 	break;
 					case 0:
-						// 批量删除
-						delItems(this.chooseIds).then(res => {
-							console.log('delItems res', res)
-							if (res[1].data.affectedRows !== 0) {
+						console.log('点击删除收藏')
+						// this.showModal = true
+						delCollectItem(this.chooseIds, userId()).then(res => {
+							console.log('取消收藏res', res)
+							if (res[1].data.affectedRows > 0) {
 								this.$refs.uToast.show({
-									title: '删除成功',
+									title: '取消收藏成功',
 									duration: 700,
 									type: 'success',
 									callback: () => {
@@ -324,45 +366,21 @@
 								})
 							} else {
 								this.$refs.uToast.show({
-									title: '删除失败',
+									title: '取消收藏失败',
 									duration: 700,
 									type: 'error'
 								})
 							}
 						}).catch(err => {
-							console.log('批量删除错误', err)
+							console.log('取消收藏错误返回', err)
 							this.$refs.uToast.show({
-								title: '删除失败' + err,
+								title: '取消收藏失败' + err,
 								duration: 700,
 								type: 'error'
 							})
 						})
 
 						break;
-
-					case 1:
-						console.log('点击批量分享')
-						this.showModal = true
-						break;
-
-					case 2:
-						//分享
-						const flag = copyText(`${appURL}pages/details/details?id=${this.chooseIds.join(',')}`)
-						console.log('点击分享(已复制到剪切板)', `${appURL}pages/details/details?ids=${this.chooseIds.join(',')}`)
-						this.$refs.uToast.show({
-							title: '链接已复制到剪切板',
-							duration: 700,
-							type: 'success',
-							callback: () => {
-								// this.itemList.splice(this.handleIndex, 1)
-							}
-						})
-						break;
-
-					case 3:
-						console.log('批量收藏',this.chooseIds)
-						break;
-
 					default:
 						break;
 				}

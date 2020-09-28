@@ -2,6 +2,8 @@ const URL = 'http://127.0.0.1:7002'
 
 export default URL
 
+export const appURL = 'http://localhost:8080/#/'
+
 // 获取轮播
 export const getSwiper = () => {
 	return uni.request({
@@ -120,9 +122,58 @@ export const joinGrop = (id,gropName) => {
 		url: URL + '/joinGrop/'+id+'/'+gropName
 	});
 }
+// 批量加入分组
+export const joinGrops = (ids,gropName) => {
+	ids = ids.join(',')
+	return uni.request({
+		url: URL + '/joinGrops/'+ids+'/'+gropName
+	});
+}
+
 // 获取分组item列表
 export const getGropList = (sort,type) => {
 	return uni.request({
 		url: URL + '/getGropList/'+sort+'/'+type,
+	});
+}
+
+
+// 收藏单个
+export const collectItem = (data) => {
+	return uni.request({
+		url: URL + '/collectItem/',
+		method:'POST',
+		data
+	});
+}
+// 取消收藏
+export const delCollectItem = (ids,userId) => {
+	ids = ids.join(',')
+	return uni.request({
+		url: URL + '/delCollectItem/'+ids+'/'+userId,
+		method:'DELETE'
+	});
+}
+// 获取收藏列表
+export const getCollectList = (userId) => {
+	return uni.request({
+		url: URL + '/getCollectList/'+userId,
+	});
+}
+
+
+// 加入历史
+export const joinHistory = (data) => {
+	return uni.request({
+		url: URL + '/joinHistory/',
+		method:'POST',
+		data
+	});
+}
+
+// 获取收藏列表
+export const getHistoryList = (userId) => {
+	return uni.request({
+		url: URL + '/getHistoryList/'+userId,
 	});
 }

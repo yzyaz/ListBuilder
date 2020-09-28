@@ -18,10 +18,13 @@
 			<view class="price" v-if="item.itemType!=='个人作品'"> {{'￥'+item.itemPrice}} </view>
 
 			<!-- item的操作 -->
-			<view v-if="!isClickManage" class="handleItem" @click.stop="(handleItemData.handleItemShow=true)&&(handleId=item.id)">
-				<u-icon name="more-dot-fill" size="50" style="margin-right: ;"></u-icon>
+			<view class="" v-if="!isHistory">
+				<view v-if="!isClickManage" class="handleItem" @click.stop="(handleItemData.handleItemShow=true)&&(handleId=item.id)&&(clickIndex=index)">
+					<u-icon name="more-dot-fill" size="50" style="margin-right: ;"></u-icon>
+				</view>
+				<view v-else class="manageBtn" :style="'background-color:'+ (item.isChoose?'#f40;':';')"></view>
 			</view>
-			<view v-else class="manageBtn" :style="'background-color:'+ (item.isChoose?'#f40;':';')"></view>
+
 		</view>
 		<!-- </block> -->
 		<!-- 弹出操作栏 -->
@@ -39,10 +42,18 @@
 <script>
 	import uniIcons from "@/components/uni-icons/uni-icons.vue"
 	import {
+		appURL,
 		delItem,
 		joinGrop,
-		getGropType
+		getGropType,
+		collectItem,
+		delCollectItem
 	} from '@/common/util/API.js'
+	import {
+		userId,
+		authorId,
+		copyText
+	} from '@/common/util/utils.js'
 	export default {
 		components: {
 			uniIcons
@@ -55,6 +66,14 @@
 			isClickManage: { //右上角管理按钮点击
 				type: Boolean,
 				default: false
+			},
+			inCollect: {
+				type: Boolean,
+				default: false
+			},
+			isHistory: {
+				type: Boolean,
+				default: false
 			}
 		},
 		data() {
@@ -62,7 +81,10 @@
 				itemList: [],
 				handleItemData: {
 					handleItemShow: false,
-					handleItemList: [{
+					handleItemList: this.inCollect ? [{
+						text: '取消收藏',
+						color: 'red'
+					}] : [{
 						text: '删除',
 						color: 'red'
 					}, {
@@ -74,7 +96,8 @@
 					}],
 				},
 				handleId: '',
-				handleIndex: '',
+				handleIndex: '', //弹出操作的index
+				clickIndex: '', //点击的item的index
 				modalShow: false,
 				modalTitle: '提示',
 				modalConfirmType: '', //操作类型
@@ -85,27 +108,41 @@
 			};
 		},
 		created() {
+
 			// 获取分组类型列表
-			getGropType().then(res => {
-				if (res[1].data.length) {
-					this.gropTypeList = res[1].data.map(i => ({
-						...i,
-						text: i.value
-					}))
-				}
-				console.log('grop res', res)
-			}).catch(err => {
-				console.log('获取分组错误', err)
-			})
+			const storage_gropType = JSON.parse(window.localStorage.getItem('gropType'))
+			if (!storage_gropType) {
+				getGropType().then(res => {
+					if (res[1].data.length) {
+						window.localStorage.setItem('gropType', JSON.stringify(res[1].data))
+						this.gropTypeList = res[1].data.map(i => ({
+							...i,
+							text: i.value
+						}))
+					}
+					console.log('grop res', res)
+				}).catch(err => {
+					console.log('获取分组错误', err)
+				})
+
+			} else {
+				this.gropTypeList = storage_gropType.map(i => ({
+					...i,
+					text: i.value
+				}))
+
+			}
+
+			console.log('inCollect', this.inCollect)
 
 		},
 		watch: {
 			myList(val) {
 				// if (val.length) {
-					this.itemList = val.map(i => ({
-						...i,
-						isChoose: false //多个管理时是否被选中
-					}))
+				this.itemList = val.map(i => ({
+					...i,
+					isChoose: false //多个管理时是否被选中
+				}))
 				// }
 				console.log('itemList', this.itemList)
 			}
@@ -128,21 +165,109 @@
 			actionSheet(i) {
 				console.log('点击操作', i, 'id:', this.handleId)
 				this.modalConfirmType = i
-				switch (i) {
-					case 0:
-						//删除
-						this.handleIndex = i
-						this.modalShow = true
-						this.modalTitle = '提示'
-						break;
-					case 1:
-						//加入分组
-						this.handleIndex = i
-						this.modalShow = true
-						this.modalTitle = '选择加入的名称'
-						break;
-					default:
-						break;
+				if (!this.inCollect) {
+					switch (i) {
+						case 0:
+							//删除
+							this.handleIndex = i
+							this.modalShow = true
+							this.modalTitle = '提示'
+							break;
+						case 1:
+							//加入分组
+							this.handleIndex = i
+							this.modalShow = true
+							this.modalTitle = '选择加入的名称'
+							break;
+						case 2:
+							//分享
+							const flag = copyText(`${appURL}pages/details/details?id=${this.handleId}`)
+							console.log('点击分享(已复制到剪切板)', `${appURL}pages/details/details?id=${this.handleId}`)
+							this.$refs.uToast.show({
+								title: '链接已复制到剪切板',
+								duration: 700,
+								type: 'success',
+								callback: () => {
+									// this.itemList.splice(this.handleIndex, 1)
+								}
+							})
+							break;
+						case 3:
+							//收藏
+							console.log('收藏')
+							const data = {
+								userId: userId(),
+								itemId: this.handleId,
+								authorId: authorId()
+							}
+							collectItem(data).then(res => {
+								console.log('收藏返回', res)
+								if (res[1].data.isCollect) {
+									this.$refs.uToast.show({
+										title: '请勿重复收藏',
+										duration: 700,
+										type: 'success',
+										callback: () => {
+											// this.itemList.splice(this.handleIndex, 1)
+										}
+									})
+
+								} else if (res[1].data.isScuccess) {
+									this.$refs.uToast.show({
+										title: '收藏成功',
+										duration: 700,
+										type: 'success',
+										callback: () => {
+											// this.itemList.splice(this.handleIndex, 1)
+										}
+									})
+								} else {
+									this.$refs.uToast.show({
+										title: '收藏失败',
+										duration: 700,
+										type: 'error'
+									})
+								}
+							}).catch(err => {
+								console.log('err', err)
+								this.$refs.uToast.show({
+									title: '收藏失败' + err,
+									duration: 700,
+									type: 'error'
+								})
+							})
+							break;
+						default:
+							break;
+					}
+				} else {
+					console.log('点击取消收藏')
+					delCollectItem([this.handleId], userId()).then(res => {
+						console.log('取消收藏res', res)
+						if (res[1].data.affectedRows > 0) {
+							this.$refs.uToast.show({
+								title: '取消收藏成功',
+								duration: 700,
+								type: 'success',
+								callback: () => {
+									this.itemList.splice(this.clickIndex, 1)
+								}
+							})
+						} else {
+							this.$refs.uToast.show({
+								title: '删除失败',
+								duration: 700,
+								type: 'error'
+							})
+						}
+					}).catch(err => {
+						console.log('取消收藏错误返回', err)
+						this.$refs.uToast.show({
+							title: '取消收藏失败' + err,
+							duration: 700,
+							type: 'error'
+						})
+					})
 				}
 			},
 			deletItem() {
@@ -154,7 +279,7 @@
 							duration: 700,
 							type: 'success',
 							callback: () => {
-								this.itemList.splice(this.handleIndex, 1)
+								this.itemList.splice(this.clickIndex, 1)
 							}
 						})
 					} else {
